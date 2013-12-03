@@ -16,6 +16,7 @@
 		<link href='http://fonts.googleapis.com/css?family=Oxygen' rel='stylesheet' type='text/css'>
 		
         <script src="js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
+		<script src='https://cdn.firebase.com/v0/firebase.js'></script>
     </head>
     <body>
 		<div id="login-page">
@@ -23,13 +24,16 @@
 			<div class="info">
 				<h1>Welcome Doctor</h1>
 				<label>Email</label>
-				<input type="email" id="email" class="form-control" placeholder="Enter email to login">
-				<button type="submit" class="btn btn-default">Sign in</button>
+				<input type="email" class="form-control email" placeholder="Enter email to login">
+				<div class="invalid-input">Please enter a valid email</div>
+				<button type="submit" class="btn btn-default submit-data">Sign in</button>
 			</div>
 		</div>
-		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
         <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.10.1.min.js"><\/script>')</script>
         <script src="js/vendor/bootstrap.min.js"></script>
         <script src="js/main.js"></script>
+		<script>
+			newApp = new window.ManageDoctor();
+		</script>
     </body>
 </html>
