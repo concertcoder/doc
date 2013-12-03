@@ -38,18 +38,28 @@
 				}
 				
 			}, this));
+			
+			$(this.config.elements.mainTabs).on('click', $.proxy(function(e){
+				$el = $(e.currentTarget);
+				
+				if(!$el.hasClass('active')){
+					$(this.config.elements.mainTabs).parent().removeClass('active');
+					$el.parent().addClass('active');
+					$(this.config.elements.manage.tabs.generic).removeClass('active');
+					$('#'+$el.data().id).addClass('active');
+				}
+			}, this));
 		
 		}, this);
 		
 		loadDoctor = $.proxy(function(email){
 			var $doctorRef = new Firebase(this.config.firebase.doctors+'/'+btoa(email));
 			$doctorRef.on('value', $.proxy(function(snapshot){
-				console.log('Load attempt');
 				if(snapshot.val() === null){
 					createDoctor();
 				} else {
 					this.doctor = snapshot.val();
-					//loadManagementScreen();
+					loadManagementScreen();
 				}
 			}, this));
 		}, this);
@@ -61,6 +71,20 @@
 				
 			$newDoc.set(docTemplate);
 			this.doctor = docTemplate;
+			loadManagementScreen();
+			
+		}, this);
+		
+		loadManagementScreen = $.proxy(function(email){
+			if(this.doctor.last_name.length>0){
+				$(this.config.elements.genericFields.lastName).html(this.doctor.last_name);
+			} else {
+				$(this.config.elements.genericFields.lastName).html('N/A');
+			}
+			
+			$(this.config.elements.login.container).hide();
+			$(this.config.elements.manage.container).show();
+			
 		}, this);
 		
 		validateEmail = function(email){
@@ -71,10 +95,24 @@
 		ManageDoctor.defaultConfig = {
 			'elements' : {
 				'login' : {
+					'container' : '#login-page',
 					'email': '#login-page .info .email',
 					'submit' : '#login-page .info .submit-data'
 				},
-				'submitData' : '.submit-data'
+				'manage' : {
+					'container' : '#manage-doctor-assets',
+					'tabs' : {
+						'profile' : '#profile',
+						'bookings' : '#bookings',
+						'schedule' : '#schedule',
+						'generic' : '.doctor-tab-data'
+					}
+				},
+				'submitData' : '.submit-data',
+				'mainTabs' : '.navigate-tab',
+				'genericFields' : {
+					'lastName' : '.doctor-last-name'
+				}
 			},
 			'firebase' : {
 				'doctors' : 'https://concertcoder.firebaseio.com/doctors'

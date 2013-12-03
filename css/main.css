@@ -95,3 +95,19 @@ h1, button{
 	font-family: 'Oxygen', sans-serif;
 	color: #55ACEE;
 }
+
+#manage-doctor-assets{
+	display: none;
+}
+
+#manage-doctor-assets .doctor-tab-data{
+	height: 700px;
+	width: 100%;
+	padding: 50px 70px 50px 70px;
+	display:none;
+}
+
+#manage-doctor-assets .doctor-tab-data.active{
+	display: block;
+}
+
