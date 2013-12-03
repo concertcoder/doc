@@ -1,0 +1,69 @@
+#login-page{
+	width: 100%;
+	height: 700px;
+	position: relative;
+}
+
+#login-page .background{
+	background-image: url('../img/dental-chair.jpg');
+}
+
+#login-page .info{
+	margin: 0 auto;
+	padding: 30px 20px 30px 20px;
+	border-radius: 10px;
+	width: 500px;
+	height: 300px;
+	background-color: white;
+	border: 1px solid #55ACEE;
+	position: relative;
+	top: 200px;
+	box-shadow: 2px 2px 4px 3px #CCD6DD;
+}
+
+#login-page .info h1{
+	text-align:center;
+}
+
+#login-page .info input {
+	width: 65%;
+	margin: 0px auto;
+}
+
+#login-page .info label:first-child{
+	padding-top: 15px;
+}
+
+#login-page .info label{
+	width: 65%;
+	margin: 0 auto;
+	display: block;
+	color: #66757f;
+}
+
+#login-page .info button{
+	margin: 30px auto;
+	width: 80px;
+	display: block;
+	
+}
+
+h1{
+	letter-spacing: 2px;
+	padding-bottom: 10px;
+}
+
+.background{
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	top:0;
+	left:0;
+	opacity: 0.5;
+	z-index: -1;
+}
+
+h1, button{
+	font-family: 'Oxygen', sans-serif;
+	color: #292F33;
+}
