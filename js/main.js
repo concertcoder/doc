@@ -55,7 +55,9 @@ function formatDate(date, format)
 			
 			// Close navbar drop down for mobile on click
 			$('.nav a').on('click', function(){
-				$("button.navbar-toggle").click();
+				if($(this).closest('.in').length){
+					$("button.navbar-toggle").click();
+				}
 			});
 		
 			// Whenever the enter key is pressed, try and find the adjacent submit button and trigger it
