@@ -1,4 +1,6 @@
-function formatDate(date, format) //author: meizz
+// Author: Meizz
+// Simple format date functions
+function formatDate(date, format)
 {
   var o = {
     "M+" : date.getMonth()+1, //month
@@ -19,6 +21,7 @@ function formatDate(date, format) //author: meizz
   return format;
 }
 
+// Manage Doctor Object
 (function ($){
 	window.ManageDoctor = function(options) {
 		var initialize = null,
@@ -26,23 +29,31 @@ function formatDate(date, format) //author: meizz
 			initDom = null
 			validateEmail = null;
 	
+		// Config is used for configurations
 		this.config = null;
+		// Doctor's email
 		this.email = null;
+		// Doctor's profile info
 		this.doctor = null;
+		// All of the booking requests at time of sign in
 		this.bookingRequests = Array();
 		
+		// Main initializer
 		initialize = $.proxy(function(){
 			this.config = $.extend(true, ManageDoctor.defaultConfig, options);
 			initEvents();
 		}, this);
 		
+		// Initializes load time events
 		initEvents = $.proxy(function(){
 		
+			// Logout scenario
 			$('.logout').on('click', $.proxy(function(e){
 				location.reload();
-				//createBookingRequest();
+				createBookingRequest();
 			}, this));
 			
+			// Close navbar drop down for mobile on click
 			$('.nav a').on('click', function(){
 				$("button.navbar-toggle").click();
 			});
@@ -63,10 +74,19 @@ function formatDate(date, format) //author: meizz
 				}
 			}, this));
 		
-			$(this.config.elements.login.submit).on('click.submit', $.proxy(function(){
+			// Login submssion
+			$(this.config.elements.login.submit).on('click.submit', $.proxy(function(e){
 				var $email = $(this.config.elements.login.email),
-					email = $email.val();
+					email = $email.val(),
+					$el = $(e.currentTarget);
 				
+				// Easy way to avoid double submissions
+				if($el.hasClass('submitting')){
+					return;
+				} else {
+					$el.addClass('submitting');
+				}
+
 				// Email must exist and be valid
 				if(email.length > 0 && validateEmail(email)){
 					$email.removeClass('invalid');
@@ -79,6 +99,7 @@ function formatDate(date, format) //author: meizz
 				
 			}, this));
 			
+			// Setting up main tabs toggling
 			$(this.config.elements.mainTabs).on('click', $.proxy(function(e){
 				$el = $(e.currentTarget);
 				
@@ -90,6 +111,7 @@ function formatDate(date, format) //author: meizz
 				}
 			}, this));
 			
+			// Setting up profile editing fields
 			$(this.config.elements.profile.editField).on('click.edit', $.proxy(function(e){
 				var $el = $(e.currentTarget),
 					$p = $el.nextAll('p').first(),
@@ -101,6 +123,7 @@ function formatDate(date, format) //author: meizz
 				$p.hide();
 				$input.show();
 				
+				// On field submission
 				$el.on('click.submit', $.proxy(function(e){
 					var $el = $(e.currentTarget),
 						$p = $el.nextAll('p').first(),
@@ -128,12 +151,14 @@ function formatDate(date, format) //author: meizz
 		
 		}, this);
 		
+		// Updates a doctors field given the field id (name) and its value
 		updateDoctorField = $.proxy(function(id, val){
 			var $doctorRef = new Firebase(this.config.firebase.doctors+'/'+btoa(this.doctor.email));
 			this.doctor[id] = val;
 			$doctorRef.set(this.doctor);
 		}, this);
 		
+		// Loads a doctor given an email
 		loadDoctor = $.proxy(function(email){
 			var $doctorRef = new Firebase(this.config.firebase.doctors+'/'+btoa(email));
 			$doctorRef.on('value', $.proxy(function(snapshot){
@@ -146,6 +171,7 @@ function formatDate(date, format) //author: meizz
 			}, this));
 		}, this);
 		
+		// Creates a doctor with the config template using the email as the base element
 		createDoctor = $.proxy(function(email){
 			var $doctorRef = new Firebase(this.config.firebase.doctors),
 				$newDoc = $doctorRef.child(btoa(email)),
@@ -158,11 +184,13 @@ function formatDate(date, format) //author: meizz
 			loadManagementScreen();
 		}, this);
 		
+		// Used for testing, creates some mock data for booking requests
 		createBookingRequest = $.proxy(function(){
 			var $bookingRef = new Firebase(this.config.firebase.bookingRequests),
 				$newRequest = $bookingRef.push(),
 				time = new Date();
 			
+			// This scenario is run to have a conflicting scheduled booking
 			time.setDate(time.getDate()+14);
 			$newRequest.set({patientName: 'Chris Gosselin', requestTime: 1387508903989, description: 'Check up', doctor: 'greg@gmail.com'});
 			time.setDate(time.getDate()+14);
@@ -179,6 +207,7 @@ function formatDate(date, format) //author: meizz
 			$newRequest.set({patientName: 'Kendrick Lamar', requestTime: time.getTime(), description: 'Vocal chords', doctor: 'greg@gmail.com'});
 		}, this);
 		
+		// Loading the booking requests
 		loadBookingRequests = $.proxy(function(){
 			var $bookingRef = new Firebase(this.config.firebase.bookingRequests),
 				$appointmentsRef = new Firebase(this.config.firebase.appointments),
@@ -248,10 +277,13 @@ function formatDate(date, format) //author: meizz
 
 					
 					$bookingRef.off('value');				
+				} else {
+					$(this.config.elements.bookings.noMore).show();
 				}
 			}, this));
 		}, this);
 		
+		// Attaches the booking request events
 		attachBookingRequestEvents = $.proxy(function(){
 			$(this.config.elements.bookings.acceptBooking).on('click', $.proxy(function(e){
 				var $container = $(e.currentTarget).closest(this.config.elements.bookings.request);				
@@ -269,6 +301,7 @@ function formatDate(date, format) //author: meizz
 			}, this));
 		}, this);
 		
+		// Accepts a booking request
 		acceptBookingRequest = $.proxy(function(bookingID){
 			// Grab the node data, attach it to the doctor's appointments, remove the node
 			var $bookingRef = new Firebase(this.config.firebase.bookingRequests+'/'+bookingID);
@@ -285,10 +318,14 @@ function formatDate(date, format) //author: meizz
 				$bookingRef.off('value');
 				$bookingRef.set(null);
 				
-				$(this.config.elements.bookings.request+'[data-id="'+bookingID+'"]').fadeOut();
+				$(this.config.elements.bookings.request+'[data-id="'+bookingID+'"]').fadeOut(function(){
+					$(this).remove();
+					checkRequestsLeft();
+				});
 			}, this));
 		}, this);
 		
+		// Cancels a booking request
 		cancelBookingRequest = $.proxy(function(bookingID){
 			// Grab the node data, attach it to the doctor's appointments, remove the node
 			var $bookingRef = new Firebase(this.config.firebase.bookingRequests+'/'+bookingID);
@@ -296,14 +333,27 @@ function formatDate(date, format) //author: meizz
 			$bookingRef.on('value', $.proxy(function(snapshot){
 				$bookingRef.off('value');
 				$bookingRef.set(null);
-				$(this.config.elements.bookings.request+'[data-id="'+bookingID+'"]').fadeOut();
+				$(this.config.elements.bookings.request+'[data-id="'+bookingID+'"]').fadeOut(function(e){
+					$(this).remove();
+					checkRequestsLeft();
+				});
 			}, this));
+		}, this);
+		
+		// Checks to see if any requests are left, if not shows an alert
+		checkRequestsLeft = $.proxy(function(){
+			var $requests = $(this.config.elements.bookings.request);
+			
+			if(!$requests.length){
+				$(this.config.elements.bookings.noMore).show();
+			}
 		}, this);
 		
 		reschduleBookingRequest = $.proxy(function(bookingID){
 			
 		}, this);
 		
+		// Sets up the management screens
 		loadManagementScreen = $.proxy(function(){
 
 			// Set the page data 
@@ -328,11 +378,13 @@ function formatDate(date, format) //author: meizz
 			
 		}, this);
 		
+		// validates an email
 		validateEmail = function(email){
 			var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 			return re.test(email);
 		}
 		
+		// config data
 		ManageDoctor.defaultConfig = {
 			elements : {
 				login : {
@@ -360,7 +412,8 @@ function formatDate(date, format) //author: meizz
 					container: '#manage-doctor-assets #bookings .request-container',
 					acceptBooking: '#manage-doctor-assets #bookings .request-container .request .accept-booking',
 					rescheduleBooking: '#manage-doctor-assets #bookings .request-container .request .reschedule-booking',
-					cancelBooking: '#manage-doctor-assets #bookings .request-container .request .cancel-booking'
+					cancelBooking: '#manage-doctor-assets #bookings .request-container .request .cancel-booking',
+					noMore:  '#manage-doctor-assets #bookings .request-container .no-more-requests'
 				},
 				submitData : '.submit-data',
 				mainTabs : '.navigate-tab',
@@ -393,6 +446,7 @@ function formatDate(date, format) //author: meizz
 			appointmentTime : 1800000
 		};
 		
+		// Start building the object
 		initialize();
 	}
 }(window.jQuery));

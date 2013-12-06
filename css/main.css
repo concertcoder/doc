@@ -180,8 +180,16 @@ input.invalid  + .invalid-input{
 	width: 100%;
 }
 
+#manage-doctor-assets #bookings {
+	min-height: 600px;
+}
+
 #manage-doctor-assets #bookings .request-container{
 	padding: 30px 0px 30px 0px;
+}
+
+#manage-doctor-assets #bookings .no-more-requests{
+	display: none;
 }
 
 .request{
