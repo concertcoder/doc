@@ -1,3 +1,20 @@
+@media (min-width: 768px){
+	.navbar-collapse .navbar-nav.navbar-left:first-child{
+		margin-left: 0px;
+	}
+}
+
+@media (min-width: 450px){
+	#manage-doctor-assets #profile #doctor-properties{
+		width:50%;
+		padding-left: 80px;
+	}
+	
+	#manage-doctor-assets #profile #doctor-image{
+		width:50%;
+	}
+}
+
 label{
 	color: #66757f;
 }
@@ -151,19 +168,12 @@ input.invalid  + .invalid-input{
 	cursor: pointer;
 }
 
-#manage-doctor-assets #profile #doctor-properties{
-	width:50%;
+#manage-doctor-assets #profile #doctor-properties, #manage-doctor-assets #profile #doctor-image{
 	float: left;
-	padding-left: 80px;
 }
 
 #manage-doctor-assets #profile #doctor-properties h1{
 	text-align: right;
-}
-
-#manage-doctor-assets #profile #doctor-image{
-	width:50%;
-	float: left;
 }
 
 #manage-doctor-assets #profile #doctor-image img{

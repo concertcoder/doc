@@ -40,8 +40,12 @@ function formatDate(date, format) //author: meizz
 		
 			$('.logout').on('click', $.proxy(function(e){
 				location.reload();
-				createBookingRequest();
+				//createBookingRequest();
 			}, this));
+			
+			$('.nav a').on('click', function(){
+				$("button.navbar-toggle").click();
+			});
 		
 			// Whenever the enter key is pressed, try and find the adjacent submit button and trigger it
 			$('input').on('keydown', $.proxy(function(e){

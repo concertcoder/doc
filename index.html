@@ -32,16 +32,20 @@
 		<div id="manage-doctor-assets">
 			<nav class="navbar navbar-default navbar-fixed-top navbar-inverse" role="navigation">
 				<div class="navbar-header">
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#main-collapse">
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
 					<a class="navbar-brand" href="#">Dr. <span class="doctor last-name"></span></a>
 				</div>
-				<div class="nav navbar-nav">
-					<ul class="nav navbar-nav navbar-right">
+				
+				<div class="collapse navbar-collapse" id="main-collapse">
+					<ul class="nav navbar-nav navbar-left">
 						<li class="active"><a class="navigate-tab" data-id="profile" href="#">Profile</a></li>
 						<li><a class="navigate-tab" data-id="bookings" href="#">Bookings</a></li>
 						<li><a class="navigate-tab" data-id="schedule" href="#">Schedule</a></li>
 					</ul>
-				</div>
-				<div class="collapse navbar-collapse">
 					<ul class="nav navbar-nav navbar-right">
 						<li><a class="logout" href="#">Logout</a></li>
 					</ul>
