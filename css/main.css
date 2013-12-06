@@ -192,6 +192,49 @@ input.invalid  + .invalid-input{
 	display: none;
 }
 
+#manage-doctor-assets #bookings .fixed-center-container {
+	top: 200px;
+	left: 0px;
+	right: 0px;
+	display: none;
+	position: fixed;
+}
+
+
+#manage-doctor-assets #bookings .fixed-center-container.active{
+	display: block;
+}
+
+#manage-doctor-assets #bookings .reschedule-info {
+	max-width: 400px;
+	background: white;
+	border: 1px solid black;
+	padding: 30px;
+	margin: 0 auto;
+	border-radius: 10px;
+	position: relative;
+}
+
+#manage-doctor-assets #bookings .reschedule-info .close {
+	position: absolute;
+	top:15px;
+	right: 15px;
+}
+
+#manage-doctor-assets #bookings .reschedule-info p{
+	padding-top: 10px;
+}
+
+#manage-doctor-assets #bookings .reschedule-info input{
+	width: 100%;
+}
+
+#manage-doctor-assets #bookings .reschedule-info button{
+	margin: 0 auto;
+	display: block;
+	margin-top:15px;
+}
+
 .request{
 	width: 250px;
 	color: white;

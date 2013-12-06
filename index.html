@@ -13,7 +13,7 @@
         <link rel="stylesheet" href="css/bootstrap.min.css">
         <link rel="stylesheet" href="css/bootstrap-theme.min.css">
         <link rel="stylesheet" href="css/main.css">
-		<link href='http://fonts.googleapis.com/css?family=Oxygen' rel='stylesheet' type='text/css'>
+		<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
 		
         <script src="js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
 		<script src='https://cdn.firebase.com/v0/firebase.js'></script>
@@ -115,6 +115,22 @@
 						</div>
 					</div>
 				</div>
+				<div class="fixed-center-container">
+					<div class="reschedule-info">
+						<div class="close">x</div>
+						<h3>Reschedule Date and Time</h3>
+						
+						<p>Date:</p>
+						<input type="text" id="reschedule-date">
+						<div class="invalid-input">Please enter a valid date(Ex. 12/18/2013)</div>
+						
+						<p>Time:</p>
+						<input type="text" id="reschedule-time" placeholder="15:30">
+						<div class="invalid-input">Please enter a valid time (Ex. 02:30)</div>
+						
+						<button type="submit" class="btn btn-default submit-data">Reschedule</button>
+					</div>
+				</div>	
 			</div>
 			<div id="schedule" class="doctor-tab-data">
 				<div class="floating-container">
@@ -122,7 +138,8 @@
 				</div>
 			</div>
 		</div>
-        <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.10.1.min.js"><\/script>')</script>
+        <script src="js/vendor/jquery-1.10.1.min.js"></script>
+		<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
         <script src="js/vendor/bootstrap.min.js"></script>
         <script src="js/main.js"></script>
 		<script>

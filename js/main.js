@@ -21,6 +21,34 @@ function formatDate(date, format)
   return format;
 }
 
+function isValidDate(value) {
+  var userFormat = 'mm/dd/yyyy';
+
+  if(typeof value === 'undefined'){
+	return false;
+  }
+  
+  delimiter = /[^mdy]/.exec(userFormat)[0],
+  theFormat = userFormat.split(delimiter),
+  theDate = value.split(delimiter),
+
+  isDate = function (date, format) {
+    var m, d, y
+    for (var i = 0, len = format.length; i < len; i++) {
+      if (/m/.test(format[i])) m = date[i]
+      if (/d/.test(format[i])) d = date[i]
+      if (/y/.test(format[i])) y = date[i]
+    }
+    return (
+      m > 0 && m < 13 &&
+      y && y.length === 4 &&
+      d > 0 && d <= (new Date(y, m, 0)).getDate()
+    )
+  }
+
+  return isDate(theDate, theFormat)
+}
+
 // Manage Doctor Object
 (function ($){
 	window.ManageDoctor = function(options) {
@@ -46,6 +74,49 @@ function formatDate(date, format)
 		
 		// Initializes load time events
 		initEvents = $.proxy(function(){
+		
+			// Initializes the reschedule date picker
+			$(this.config.elements.bookings.rescheduleDate).datepicker();
+			
+			// Closes the rescheduler picker
+			$(this.config.elements.bookings.rescheduleClose).on('click', $.proxy(function(){
+				var $container = $(this.config.elements.bookings.rescheduleContainer),
+					$date = $(this.config.elements.bookings.rescheduleDate),
+					$time =  $(this.config.elements.bookings.rescheduleTime);
+					
+					$container.hide();
+					$time.val('');
+					$date.val('');
+			}, this));
+			
+			// Reschedule picker event
+			$(this.config.elements.bookings.reschedule).on('click.submit', $.proxy(function(){
+				var $date = $(this.config.elements.bookings.rescheduleDate),
+					$time = $(this.config.elements.bookings.rescheduleTime),
+					militaryTimeRe = /(00|01|02|03|04|05|06|07|08|09|10|11|12|13|14|15|16|17|18|19|20|21|22|23)[:](0|1|2|3|4|5)\d{1}/,
+					dateValid = isValidDate($date.val()),
+					timeValid = militaryTimeRe.test($time.val());
+				
+				// Make sure inputs are valid, inform user if not
+				if(!dateValid){
+					$date.addClass('invalid');
+				} else {
+					$date.removeClass('invalid');
+				}
+				
+				if(!timeValid){
+					$time.addClass('invalid');
+				} else {
+					$time.removeClass('invalid');
+				}
+				
+				if(dateValid && timeValid){
+					$time.val('');
+					$date.val('');
+					$(this.config.elements.bookings.rescheduleContainer).hide();
+				}
+				
+			}, this));
 		
 			// Logout scenario
 			$('.logout').on('click', $.proxy(function(e){
@@ -351,8 +422,8 @@ function formatDate(date, format)
 			}
 		}, this);
 		
-		reschduleBookingRequest = $.proxy(function(bookingID){
-			
+		rescheduleBookingRequest = $.proxy(function(bookingID){
+			$(this.config.elements.bookings.rescheduleContainer).show();
 		}, this);
 		
 		// Sets up the management screens
@@ -415,7 +486,12 @@ function formatDate(date, format)
 					acceptBooking: '#manage-doctor-assets #bookings .request-container .request .accept-booking',
 					rescheduleBooking: '#manage-doctor-assets #bookings .request-container .request .reschedule-booking',
 					cancelBooking: '#manage-doctor-assets #bookings .request-container .request .cancel-booking',
-					noMore:  '#manage-doctor-assets #bookings .request-container .no-more-requests'
+					noMore:  '#manage-doctor-assets #bookings .request-container .no-more-requests',
+					reschedule: '#manage-doctor-assets #bookings .reschedule-info .submit-data',
+					rescheduleDate: '#manage-doctor-assets #bookings .reschedule-info #reschedule-date',
+					rescheduleTime: '#manage-doctor-assets #bookings .reschedule-info #reschedule-time',
+					rescheduleContainer: '#manage-doctor-assets #bookings .fixed-center-container',
+					rescheduleClose: '#manage-doctor-assets #bookings .fixed-center-container .close'
 				},
 				submitData : '.submit-data',
 				mainTabs : '.navigate-tab',
