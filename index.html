@@ -94,14 +94,37 @@
 				</div>
 			</div>
 			<div id="bookings" class="doctor-tab-data">
+				<div class="fixed-center-container">
+					<div class="reschedule-info">
+						<div class="close">x</div>
+						<h3>Reschedule</h3>
+						
+						<label>Next available date/time</label>
+						<p class="next-available-container"><a href="javascipt:void(0)" class="next-available">Dec 2nd 2013, 4:00pm-4:30pm</a></p>
+						
+						<p>Date:</p>
+						<input type="text" id="reschedule-date" placeholder="12/18/2014">
+						<div class="invalid-input">Please enter a valid date(Ex. 12/18/2013)</div>
+						
+						<p>Time:</p>
+						<input type="text" id="reschedule-time" placeholder="1:00PM">
+						<div class="invalid-input">Please enter a valid time (Ex. 1:00PM)</div>
+						
+						<button type="submit" class="btn btn-default submit-data">Reschedule</button>
+					</div>
+				</div>
 				<div class="floating-container">
 					<h2>Bookings</h2>
 					<div class="request-container">
 						<div class="request template">
 							<div class="patient-info">
-								<p class="patient-name"></p>
-								<p class="patient-appointment"></p>
-								<p class="patient-description"></p>
+								<img class="patient-avatar" src=""></img>
+								<p class="patient-first-name"></p>
+								<p class="patient-last-name"></p>
+								<div class="appointment-datetime">
+									<p class="patient-appointment-date"></p>
+									<p class="patient-appointment-time"></p>
+								</div>
 							</div>
 							<div class="btn-group btn-group-justified .booking-actions">
 								<a href="javascript:void(0)" class="btn btn-default accept-booking">Accept</a>
@@ -115,22 +138,6 @@
 						</div>
 					</div>
 				</div>
-				<div class="fixed-center-container">
-					<div class="reschedule-info">
-						<div class="close">x</div>
-						<h3>Reschedule Date and Time</h3>
-						
-						<p>Date:</p>
-						<input type="text" id="reschedule-date">
-						<div class="invalid-input">Please enter a valid date(Ex. 12/18/2013)</div>
-						
-						<p>Time:</p>
-						<input type="text" id="reschedule-time" placeholder="15:30">
-						<div class="invalid-input">Please enter a valid time (Ex. 02:30)</div>
-						
-						<button type="submit" class="btn btn-default submit-data">Reschedule</button>
-					</div>
-				</div>	
 			</div>
 			<div id="schedule" class="doctor-tab-data">
 				<div class="floating-container">
@@ -141,6 +148,7 @@
         <script src="js/vendor/jquery-1.10.1.min.js"></script>
 		<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
         <script src="js/vendor/bootstrap.min.js"></script>
+		<script src="js/vendor/moment.min.js"></script>
         <script src="js/main.js"></script>
 		<script>
 			newApp = new window.ManageDoctor();

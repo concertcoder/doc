@@ -193,16 +193,21 @@ input.invalid  + .invalid-input{
 }
 
 #manage-doctor-assets #bookings .fixed-center-container {
-	top: 200px;
+	top: 120px;
 	left: 0px;
 	right: 0px;
 	display: none;
 	position: fixed;
+	z-index: 1;
 }
 
 
 #manage-doctor-assets #bookings .fixed-center-container.active{
 	display: block;
+}
+
+.fixed-center-container.active + .floating-container{
+	opacity: 0.3;
 }
 
 #manage-doctor-assets #bookings .reschedule-info {
@@ -213,6 +218,21 @@ input.invalid  + .invalid-input{
 	margin: 0 auto;
 	border-radius: 10px;
 	position: relative;
+}
+
+#manage-doctor-assets #bookings .reschedule-info h3{
+	text-align: center;
+	margin-top: 0;
+	margin-bottom: 20px;
+}
+
+#manage-doctor-assets #bookings .reschedule-info label{
+	display: block;
+	text-align: center;
+}
+
+#manage-doctor-assets #bookings .reschedule-info .next-available-container{
+	text-align: center;
 }
 
 #manage-doctor-assets #bookings .reschedule-info .close {
@@ -236,27 +256,57 @@ input.invalid  + .invalid-input{
 }
 
 .request{
-	width: 250px;
-	color: white;
+	width: 210px;
 	border: 1px solid;
 	float:left;
 	margin-right: 15px;
 	margin-bottom: 10px;
-	background-color: #43ac6a;
-	border-color: #3c9a5f;
+	border-color: #dadada;
+	opacity: 0.7;
 }
 
-.request.conflict{
-	background-color: #e99002;
-	border-color: #d08002;
+.request:hover{
+	opacity: 1;
+}
+
+.request .appointment-datetime{
+	background: #008cba;
+	color: white;
+	border-radius: 5px;
+	text-align: center;
+	padding: 10px 0px 5px 0px;
+	margin-top: 20px;
+}
+
+.request .appointment-datetime p{
+	line-height: 15px;
+}
+
+.request.conflict .appointment-datetime{
+	background: #f04124;
+}
+
+.request .btn{
+	padding: 14px 10px;
 }
 
 .request.template{
 	display: none;
 }
 
-.request .patient-name{
-	text-align:right;
+.request .patient-first-name{
+	margin-top: 10px;
+}
+
+.request .patient-first-name, .request .patient-last-name{
+	padding-left: 70px;
+	line-height: 12px;
+}
+
+.request .patient-avatar{
+	width: 50px;
+	height: 50px;
+	float: left;
 }
 
 .request .patient-info {

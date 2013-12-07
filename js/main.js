@@ -1,26 +1,3 @@
-// Author: Meizz
-// Simple format date functions
-function formatDate(date, format)
-{
-  var o = {
-    "M+" : date.getMonth()+1, //month
-    "d+" : date.getDate(),    //day
-    "h+" : date.getHours(),   //hour
-    "m+" : date.getMinutes(), //minute
-    "s+" : date.getSeconds(), //second
-    "q+" : Math.floor((date.getMonth()+3)/3),  //quarter
-    "S" : date.getMilliseconds() //millisecond
-  }
-
-  if(/(y+)/.test(format)) format=format.replace(RegExp.$1,
-    (date.getFullYear()+"").substr(4 - RegExp.$1.length));
-  for(var k in o)if(new RegExp("("+ k +")").test(format))
-    format = format.replace(RegExp.$1,
-      RegExp.$1.length==1 ? o[k] :
-        ("00"+ o[k]).substr((""+ o[k]).length));
-  return format;
-}
-
 function isValidDate(value) {
   var userFormat = 'mm/dd/yyyy';
 
@@ -84,7 +61,7 @@ function isValidDate(value) {
 					$date = $(this.config.elements.bookings.rescheduleDate),
 					$time =  $(this.config.elements.bookings.rescheduleTime);
 					
-					$container.hide();
+					$container.removeClass('active');
 					$time.val('');
 					$date.val('');
 			}, this));
@@ -113,7 +90,7 @@ function isValidDate(value) {
 				if(dateValid && timeValid){
 					$time.val('');
 					$date.val('');
-					$(this.config.elements.bookings.rescheduleContainer).hide();
+					$(this.config.elements.bookings.rescheduleContainer).removeClass('active');
 				}
 				
 			}, this));
@@ -265,19 +242,47 @@ function isValidDate(value) {
 			
 			// This scenario is run to have a conflicting scheduled booking
 			time.setDate(time.getDate()+14);
-			$newRequest.set({patientName: 'Chris Gosselin', requestTime: 1387508903989, description: 'Check up', doctor: 'greg@gmail.com'});
+			$newRequest.set({
+				patientFirstName: 'Chris',
+				patientLastName: 'Gosselin', 
+				requestTime: 1387508903989, 
+				description: 'Check up', 
+				doctor: 'greg@gmail.com',
+				patientAvatar: 'http://m.c.lnkd.licdn.com/mpr/pub/image-vQXp4Zy0CpmigY8dPFox9R6J3tQJC1Lbk9_VK0O43WL0ClYWvQXVMph03gwkN98onKvj/chris-gosselin.jpg'
+			});
 			time.setDate(time.getDate()+14);
 			
 			$newRequest = $bookingRef.push(),
-			$newRequest.set({patientName: 'Ryan Lewis', requestTime: time.getTime(), description: 'Hands hurt', doctor: 'greg@gmail.com'});
+			$newRequest.set({
+				patientFirstName: 'Ryan',
+				patientLastName: 'Lewis', 
+				requestTime: time.getTime(), 
+				description: 'Hands hurt', 
+				doctor: 'greg@gmail.com',
+				patientAvatar: 'http://www.xxlmag.com/wp-content/uploads/2013/03/Ryan-Lewis001.jpg'
+			});
 			time.setDate(time.getDate()+14);
 			
 			$newRequest = $bookingRef.push();
-			$newRequest.set({patientName: 'George Washington', requestTime: time.getTime(), description: 'Teeth Missing', doctor: 'greg@gmail.com'});
+			$newRequest.set({
+				patientFirstName: 'George',
+				patientLastName: 'Washington', 
+				requestTime: time.getTime(), 
+				description: 'Teeth Missing', 
+				doctor: 'greg@gmail.com',
+				patientAvatar: 'http://www.usmilitaryhalloffame.org/portals/0/Washington/george_washington_1307582258.jpg'
+			});
 			time.setDate(time.getDate()+14);
 			
 			$newRequest = $bookingRef.push();
-			$newRequest.set({patientName: 'Kendrick Lamar', requestTime: time.getTime(), description: 'Vocal chords', doctor: 'greg@gmail.com'});
+			$newRequest.set({
+				patientFirstName: 'Kendrick',
+				patientLastName: 'Lamar', 
+				requestTime: time.getTime(), 
+				description: 'Vocal chords', 
+				doctor: 'greg@gmail.com',
+				patientAvatar: 'https://lh4.googleusercontent.com/-Vduw_xqikZY/AAAAAAAAAAI/AAAAAAAAADA/dSD6BQ_C-T4/s120-c/photo.jpg'
+			});
 		}, this);
 		
 		// Loading the booking requests
@@ -316,7 +321,7 @@ function isValidDate(value) {
 								
 									// Check if any bookings conflict with the appointment time, if so set flag
 									$.each(this.bookingRequests, $.proxy(function(bookingIndex, booking){
-										if(appointment.requestTime <= booking.requestTime && appointment.requestTime + this.config.appointmentTime >= booking.requestTime){
+										if(appointment.requestTime <= booking.requestTime && appointment.requestTime + this.config.appointmentTimeMili >= booking.requestTime){
 											this.bookingRequests[bookingIndex].conflict = true;
 										}
 									}, this));
@@ -335,8 +340,11 @@ function isValidDate(value) {
 							}
 							
 							$request.attr('data-id', val.id)
-							$request.find('.patient-name').text(val.patientName);
-							$request.find('.patient-appointment').text(formatDate(date, "MM/dd/yyyy h:mm"));
+							$request.find('.patient-first-name').text(val.patientFirstName);
+							$request.find('.patient-last-name').text(val.patientLastName);
+							$request.find('.patient-avatar').attr('src', val.patientAvatar);
+							$request.find('.patient-appointment-date').text(moment(date).format("MMM Do YYYY"));
+							$request.find('.patient-appointment-time').text(moment(date).format("h:mm a") + " - " + moment(date).add('m', this.config.appointmentTimeMin).format("h:mm a"));
 							$request.find('.patient-description').text(val.description);
 							
 							$bookingContainer.append($request);
@@ -423,7 +431,7 @@ function isValidDate(value) {
 		}, this);
 		
 		rescheduleBookingRequest = $.proxy(function(bookingID){
-			$(this.config.elements.bookings.rescheduleContainer).show();
+			$(this.config.elements.bookings.rescheduleContainer).addClass('active');
 		}, this);
 		
 		// Sets up the management screens
@@ -521,7 +529,8 @@ function isValidDate(value) {
 				education: '',
 				avatar: 'img/default-avatar.png'
 			},
-			appointmentTime : 1800000
+			appointmentTimeMin : 30,
+			appointmentTimeMili: 180000
 		};
 		
 		// Start building the object
