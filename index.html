@@ -14,7 +14,8 @@
         <link rel="stylesheet" href="css/bootstrap-theme.min.css">
         <link rel="stylesheet" href="css/main.css">
 		<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
-		
+		<link rel="stylesheet" href="css/select2.css"/>
+    
         <script src="js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
 		<script src='https://cdn.firebase.com/v0/firebase.js'></script>
     </head>
@@ -43,7 +44,7 @@
 				<div class="collapse navbar-collapse" id="main-collapse">
 					<ul class="nav navbar-nav navbar-left">
 						<li class="active"><a class="navigate-tab" data-id="profile" href="#">Profile</a></li>
-						<li><a class="navigate-tab" data-id="bookings" href="#">Bookings</a></li>
+						<li><a class="navigate-tab" data-id="bookings" href="#">Booking Requests</a></li>
 						<li><a class="navigate-tab" data-id="schedule" href="#">Schedule</a></li>
 					</ul>
 					<ul class="nav navbar-nav navbar-right">
@@ -100,21 +101,23 @@
 						<h3>Reschedule</h3>
 						
 						<label>Next available date/time</label>
-						<p class="next-available-container"><a href="javascipt:void(0)" class="next-available">Dec 2nd 2013, 4:00pm-4:30pm</a></p>
+						<p class="next-available-container"><a href="javascipt:void(0)" class="next-available"></a></p>
 						
 						<p>Date:</p>
 						<input type="text" id="reschedule-date" placeholder="12/18/2014">
 						<div class="invalid-input">Please enter a valid date(Ex. 12/18/2013)</div>
 						
 						<p>Time:</p>
-						<input type="text" id="reschedule-time" placeholder="1:00PM">
-						<div class="invalid-input">Please enter a valid time (Ex. 1:00PM)</div>
+						<select id="reschedule-time">
+							<option></option>
+						</select>
+						<div class="invalid-input">Please select a time from the drop down</div>
 						
 						<button type="submit" class="btn btn-default submit-data">Reschedule</button>
 					</div>
 				</div>
 				<div class="floating-container">
-					<h2>Bookings</h2>
+					<h2>Booking Requests</h2>
 					<div class="request-container">
 						<div class="request template">
 							<div class="patient-info">
@@ -149,6 +152,7 @@
 		<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
         <script src="js/vendor/bootstrap.min.js"></script>
 		<script src="js/vendor/moment.min.js"></script>
+		<script src="js/vendor/select2.min.js"></script>
         <script src="js/main.js"></script>
 		<script>
 			newApp = new window.ManageDoctor();

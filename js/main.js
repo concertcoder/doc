@@ -46,14 +46,32 @@ function isValidDate(value) {
 		// Main initializer
 		initialize = $.proxy(function(){
 			this.config = $.extend(true, ManageDoctor.defaultConfig, options);
+			initDom();
 			initEvents();
+		}, this);
+		
+		// Main initializer
+		initDom = $.proxy(function(){
+			var tomorrow = new Date();
+			tomorrow.setDate(tomorrow.getDate()+1);
+			
+			// Initializes the reschedule date picker and time picker
+			$(this.config.elements.bookings.rescheduleDate).datepicker({
+				minDate: tomorrow
+			});
+			$(this.config.elements.bookings.rescheduleTime).select2({
+				placeholder: "Select an appointment date to get times"
+			});
 		}, this);
 		
 		// Initializes load time events
 		initEvents = $.proxy(function(){
 		
-			// Initializes the reschedule date picker
-			$(this.config.elements.bookings.rescheduleDate).datepicker();
+			// When the rescheduler changes dates, the available times change
+			$(this.config.elements.bookings.rescheduleDate).on('change', $.proxy(function(){
+				var date = $(this.config.elements.bookings.rescheduleDate).val();
+				//getRescheduleTimes();
+			}, this));
 			
 			// Closes the rescheduler picker
 			$(this.config.elements.bookings.rescheduleClose).on('click', $.proxy(function(){
@@ -62,7 +80,7 @@ function isValidDate(value) {
 					$time =  $(this.config.elements.bookings.rescheduleTime);
 					
 					$container.removeClass('active');
-					$time.val('');
+					$time.select2('data', null);
 					$date.val('');
 			}, this));
 			
@@ -71,8 +89,10 @@ function isValidDate(value) {
 				var $date = $(this.config.elements.bookings.rescheduleDate),
 					$time = $(this.config.elements.bookings.rescheduleTime),
 					militaryTimeRe = /(00|01|02|03|04|05|06|07|08|09|10|11|12|13|14|15|16|17|18|19|20|21|22|23)[:](0|1|2|3|4|5)\d{1}/,
-					dateValid = isValidDate($date.val()),
-					timeValid = militaryTimeRe.test($time.val());
+					date = $date.val(),
+					time = $time.select2('val'),
+					dateValid = isValidDate(date),
+					timeValid = militaryTimeRe.test(time);
 				
 				// Make sure inputs are valid, inform user if not
 				if(!dateValid){
@@ -88,9 +108,11 @@ function isValidDate(value) {
 				}
 				
 				if(dateValid && timeValid){
-					$time.val('');
+					//rescheduleAppointment(date, time);
+					$time.select2('data', null);
 					$date.val('');
 					$(this.config.elements.bookings.rescheduleContainer).removeClass('active');
+					
 				}
 				
 			}, this));
@@ -372,7 +394,9 @@ function isValidDate(value) {
 			}, this));
 			
 			$(this.config.elements.bookings.rescheduleBooking).on('click', $.proxy(function(e){
-				var $container = $(e.currentTarget).closest(this.config.elements.bookings.request);				
+				var $container = $(e.currentTarget).closest(this.config.elements.bookings.request);	
+				
+				//setNextAvailableDateTime();
 				rescheduleBookingRequest($container.attr('data-id'));
 			}, this));
 			
@@ -496,6 +520,7 @@ function isValidDate(value) {
 					cancelBooking: '#manage-doctor-assets #bookings .request-container .request .cancel-booking',
 					noMore:  '#manage-doctor-assets #bookings .request-container .no-more-requests',
 					reschedule: '#manage-doctor-assets #bookings .reschedule-info .submit-data',
+					rescheduleNextAvailable: '#manage-doctor-assets #bookings .reschedule-info .next-available',
 					rescheduleDate: '#manage-doctor-assets #bookings .reschedule-info #reschedule-date',
 					rescheduleTime: '#manage-doctor-assets #bookings .reschedule-info #reschedule-time',
 					rescheduleContainer: '#manage-doctor-assets #bookings .fixed-center-container',
