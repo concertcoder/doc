@@ -45,6 +45,8 @@ function between(x, min, max) {
 			createDoctor = null,
 			createBookingRequest = null,
 			loadBookingRequests = null,
+			loadCalendar = null,
+			updateCalendar = null,
 			attachBookingRequestEvents = null,
 			acceptBookingRequest = null,
 			cancelBookingRequest = null,
@@ -250,6 +252,8 @@ function between(x, min, max) {
 					$(this.config.elements.manage.tabs.generic).removeClass('active');
 					$('#'+$el.data().id).addClass('active');
 				}
+				
+				$('.fc-button-today').trigger('click');
 			}, this));
 			
 			// Setting up profile editing fields
@@ -376,6 +380,45 @@ function between(x, min, max) {
 			});
 		}, this);
 		
+		// Initial calendar load
+		loadCalendar = $.proxy(function(){
+			var events = Array();
+			
+			$.each(this.appointments, $.proxy(function(idx, val){
+				var event = {
+					title: val.patientFirstName + " " + val.patientLastName,
+					start: moment(val.requestTime).toDate(),
+					end:  moment(val.requestTime).add('minute', this.config.appointmentTimeMin).toDate(),
+					allDay: false
+				};
+				
+				events.push(event);
+			}, this));
+			
+			$(this.config.elements.schedule.calendar).fullCalendar({
+				events: events,
+				header: {
+					left: 'prev,next today',
+					center: 'title',
+					right: 'month,agendaWeek,agendaDay'
+				},
+				defaultView: 'agendaDay'
+			});
+			
+		}, this);
+		
+		// Updates the calendar with a new appointment
+		updateCalendar = $.proxy(function(appointment){
+			var event = {
+					title: appointment.patientFirstName + " " + appointment.patientLastName,
+					start: moment(appointment.requestTime).toDate(),
+					end:  moment(appointment.requestTime).add('minute', this.config.appointmentTimeMin).toDate(),
+					allDay: false
+				};
+				
+			$(this.config.elements.schedule.calendar).fullCalendar( 'renderEvent', event, true);
+		}, this);
+		
 		// Loading the booking requests
 		loadBookingRequests = $.proxy(function(){
 			var $bookingRef = new Firebase(this.config.firebase.bookingRequests),
@@ -425,6 +468,8 @@ function between(x, min, max) {
 								}
 							},this));
 						}
+						
+						loadCalendar();
 						
 						// Create the request object for each booking
 						$bookingTemplate.removeClass('template');
@@ -533,7 +578,8 @@ function between(x, min, max) {
 				$bookingRef.set(null);
 				
 				this.appointments.push(data);
-							
+				updateCalendar(data);
+				
 				$(this.config.elements.bookings.request+'[data-id="'+bookingID+'"]').fadeOut(function(){		
 					$(this).remove();
 					refreshRequests();
@@ -705,6 +751,9 @@ function between(x, min, max) {
 					rescheduleTime: '#manage-doctor-assets #bookings .reschedule-info #reschedule-time',
 					rescheduleContainer: '#manage-doctor-assets #bookings .fixed-center-container',
 					rescheduleClose: '#manage-doctor-assets #bookings .fixed-center-container .close'
+				},
+				schedule : {
+					calendar : '#manage-doctor-assets #schedule #calendar'
 				},
 				submitData : '.submit-data',
 				mainTabs : '.navigate-tab',
