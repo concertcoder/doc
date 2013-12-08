@@ -1,3 +1,4 @@
+// Checks validitity of date string
 function isValidDate(value) {
   var userFormat = 'mm/dd/yyyy';
 
@@ -26,13 +27,32 @@ function isValidDate(value) {
   return isDate(theDate, theFormat)
 }
 
+// Simple check range function
+function between(x, min, max) {
+  return x >= min && x <= max;
+}
+
 // Manage Doctor Object
 (function ($){
 	window.ManageDoctor = function(options) {
+		// All of the ManageDoctor functions
 		var initialize = null,
 			initEvents = null,
 			initDom = null
-			validateEmail = null;
+			validateEmail = null,
+			updateDoctorField = null,
+			loadDoctor = null,
+			createDoctor = null,
+			createBookingRequest = null,
+			loadBookingRequests = null,
+			attachBookingRequestEvents = null,
+			cancelBookingRequest = null,
+			checkRequestsLeft = null,
+			setNextAvailableDateTime = null,
+			getRescheduleTimes = null,
+			refreshRequests = null,
+			doesTimeConflictWithAppointments = null,
+			loadManagementScreen  = null;
 	
 		// Config is used for configurations
 		this.config = null;
@@ -42,6 +62,8 @@ function isValidDate(value) {
 		this.doctor = null;
 		// All of the booking requests at time of sign in
 		this.bookingRequests = Array();
+		// All of the doctor's current appointments
+		this.appointments = Array();
 		
 		// Main initializer
 		initialize = $.proxy(function(){
@@ -67,10 +89,38 @@ function isValidDate(value) {
 		// Initializes load time events
 		initEvents = $.proxy(function(){
 		
+			$(this.config.elements.bookings.rescheduleNextAvailable).on('click', $.proxy(function(e){
+				var time = $(e.currentTarget).attr('data-id'),
+					$container = $(this.config.elements.bookings.rescheduleContainer),
+					bookingID = $container.attr('data-id'),
+					$date = $(this.config.elements.bookings.rescheduleDate),
+					$time = $(this.config.elements.bookings.rescheduleTime);
+				
+				acceptBookingRequest(bookingID,parseInt(time));
+				$time.empty();
+				$date.val('');
+				$container.removeClass('active');
+			}, this));
+		
 			// When the rescheduler changes dates, the available times change
 			$(this.config.elements.bookings.rescheduleDate).on('change', $.proxy(function(){
-				var date = $(this.config.elements.bookings.rescheduleDate).val();
-				//getRescheduleTimes();
+				var date = $(this.config.elements.bookings.rescheduleDate).val(),
+					dateValid = isValidDate(date),
+					$times = $(this.config.elements.bookings.rescheduleTime),
+					times = null;
+				
+				if(dateValid){
+					times = getRescheduleTimes(moment(date), false);
+					$times.select2('destroy');
+					
+					$.each(times, $.proxy(function(idx, val){
+						$times.append('<option value='+val.id+'>'+val.text+'</option>')
+					}, this));
+					
+					$times.select2({
+						placeholder: "Select a time"
+					});
+				}
 			}, this));
 			
 			// Closes the rescheduler picker
@@ -80,7 +130,7 @@ function isValidDate(value) {
 					$time =  $(this.config.elements.bookings.rescheduleTime);
 					
 					$container.removeClass('active');
-					$time.select2('data', null);
+					$time.empty();
 					$date.val('');
 			}, this));
 			
@@ -88,17 +138,33 @@ function isValidDate(value) {
 			$(this.config.elements.bookings.reschedule).on('click.submit', $.proxy(function(){
 				var $date = $(this.config.elements.bookings.rescheduleDate),
 					$time = $(this.config.elements.bookings.rescheduleTime),
+					$container = $(this.config.elements.bookings.rescheduleContainer),
 					militaryTimeRe = /(00|01|02|03|04|05|06|07|08|09|10|11|12|13|14|15|16|17|18|19|20|21|22|23)[:](0|1|2|3|4|5)\d{1}/,
 					date = $date.val(),
 					time = $time.select2('val'),
 					dateValid = isValidDate(date),
-					timeValid = militaryTimeRe.test(time);
+					timeValid = time != "";
+					parsedDate = null,
+					today = null,
+					dateDiff = null;
 				
 				// Make sure inputs are valid, inform user if not
 				if(!dateValid){
 					$date.addClass('invalid');
 				} else {
-					$date.removeClass('invalid');
+					// Make sure date is after today
+					parsedDate = moment(date, 'MM-DD-YYYY'),
+					today = moment(),
+					dateDiff = parsedDate.diff(today, 'days');
+					
+					if(dateDiff >= 0){
+						$date.removeClass('invalid');
+					} else {
+						dateValid = false;
+						$date.addClass('invalid');
+					}
+					
+					
 				}
 				
 				if(!timeValid){
@@ -108,10 +174,10 @@ function isValidDate(value) {
 				}
 				
 				if(dateValid && timeValid){
-					//rescheduleAppointment(date, time);
-					$time.select2('data', null);
+					acceptBookingRequest($container.attr('data-id'), parseInt(time));
+					$time.empty();
 					$date.val('');
-					$(this.config.elements.bookings.rescheduleContainer).removeClass('active');
+					$container.removeClass('active');
 					
 				}
 				
@@ -152,16 +218,18 @@ function isValidDate(value) {
 					email = $email.val(),
 					$el = $(e.currentTarget);
 				
-				// Easy way to avoid double submissions
-				if($el.hasClass('submitting')){
-					return;
-				} else {
-					$el.addClass('submitting');
-				}
-
 				// Email must exist and be valid
 				if(email.length > 0 && validateEmail(email)){
+					
+					// Easy way to avoid double submissions
+					if($el.hasClass('submitting')){
+						return;
+					} else {
+						$el.addClass('submitting');
+					}
+					
 					$email.removeClass('invalid');
+					$(this.config.elements.login.loading).show();
 					this.email = email;
 					
 					loadDoctor(email);
@@ -260,47 +328,47 @@ function isValidDate(value) {
 		createBookingRequest = $.proxy(function(){
 			var $bookingRef = new Firebase(this.config.firebase.bookingRequests),
 				$newRequest = $bookingRef.push(),
-				time = new Date();
+				time = moment();
 			
 			// This scenario is run to have a conflicting scheduled booking
-			time.setDate(time.getDate()+14);
+			time.add('days', 14);
 			$newRequest.set({
 				patientFirstName: 'Chris',
 				patientLastName: 'Gosselin', 
-				requestTime: 1387508903989, 
+				requestTime: time.valueOf(), 
 				description: 'Check up', 
 				doctor: 'greg@gmail.com',
 				patientAvatar: 'http://m.c.lnkd.licdn.com/mpr/pub/image-vQXp4Zy0CpmigY8dPFox9R6J3tQJC1Lbk9_VK0O43WL0ClYWvQXVMph03gwkN98onKvj/chris-gosselin.jpg'
 			});
-			time.setDate(time.getDate()+14);
+			time.add('days', 14);
 			
 			$newRequest = $bookingRef.push(),
 			$newRequest.set({
 				patientFirstName: 'Ryan',
 				patientLastName: 'Lewis', 
-				requestTime: time.getTime(), 
+				requestTime: time.valueOf(), 
 				description: 'Hands hurt', 
 				doctor: 'greg@gmail.com',
 				patientAvatar: 'http://www.xxlmag.com/wp-content/uploads/2013/03/Ryan-Lewis001.jpg'
 			});
-			time.setDate(time.getDate()+14);
+			time.add('days', 14);
 			
 			$newRequest = $bookingRef.push();
 			$newRequest.set({
 				patientFirstName: 'George',
 				patientLastName: 'Washington', 
-				requestTime: time.getTime(), 
+				requestTime: time.valueOf(), 
 				description: 'Teeth Missing', 
 				doctor: 'greg@gmail.com',
 				patientAvatar: 'http://www.usmilitaryhalloffame.org/portals/0/Washington/george_washington_1307582258.jpg'
 			});
-			time.setDate(time.getDate()+14);
+			time.add('days', 14);
 			
 			$newRequest = $bookingRef.push();
 			$newRequest.set({
 				patientFirstName: 'Kendrick',
 				patientLastName: 'Lamar', 
-				requestTime: time.getTime(), 
+				requestTime: time.valueOf(), 
 				description: 'Vocal chords', 
 				doctor: 'greg@gmail.com',
 				patientAvatar: 'https://lh4.googleusercontent.com/-Vduw_xqikZY/AAAAAAAAAAI/AAAAAAAAADA/dSD6BQ_C-T4/s120-c/photo.jpg'
@@ -340,10 +408,16 @@ function isValidDate(value) {
 							
 								// Make sure the appointment is for this doctor
 								if(appointment.doctor === this.email){
-								
+									this.appointments.push(appointment);
 									// Check if any bookings conflict with the appointment time, if so set flag
 									$.each(this.bookingRequests, $.proxy(function(bookingIndex, booking){
-										if(appointment.requestTime <= booking.requestTime && appointment.requestTime + this.config.appointmentTimeMili >= booking.requestTime){
+										var appointmentStart = appointment.requestTime,
+											appointmentEnd = moment(appointment.requestTime).add('minute', this.config.appointmentTimeMin).valueOf(),
+											bookingStart = booking.requestTime,
+											bookingEnd = moment(booking.requestTime).add('minute', this.config.appointmentTimeMin).valueOf();
+											
+										if(between(bookingStart, appointmentStart, appointmentEnd) ||
+										between(bookingEnd, appointmentStart, appointmentEnd)){
 											this.bookingRequests[bookingIndex].conflict = true;
 										}
 									}, this));
@@ -353,9 +427,17 @@ function isValidDate(value) {
 						
 						// Create the request object for each booking
 						$bookingTemplate.removeClass('template');
+						this.bookingRequests.sort(function compare(a,b) {
+							if (a.requestTime < b.requestTime)
+								return -1;
+							if (a.requestTime > b.requestTime)
+								return 1;
+							return 0;
+						});
+						
 						$.each(this.bookingRequests, $.proxy(function(idx, val){
 							var $request = $bookingTemplate.clone(),
-								date = new Date(val.requestTime);
+								date = moment(val.requestTime);
 							
 							if(typeof val.conflict !== 'undefined' && val.conflict){
 								$request.addClass('conflict');
@@ -365,8 +447,8 @@ function isValidDate(value) {
 							$request.find('.patient-first-name').text(val.patientFirstName);
 							$request.find('.patient-last-name').text(val.patientLastName);
 							$request.find('.patient-avatar').attr('src', val.patientAvatar);
-							$request.find('.patient-appointment-date').text(moment(date).format("MMM Do YYYY"));
-							$request.find('.patient-appointment-time').text(moment(date).format("h:mm a") + " - " + moment(date).add('m', this.config.appointmentTimeMin).format("h:mm a"));
+							$request.find('.patient-appointment-date').text(date.format("MMM Do YYYY"));
+							$request.find('.patient-appointment-time').text(date.format("h:mm a") + " - " + date.add('m', this.config.appointmentTimeMin).format("h:mm a"));
 							$request.find('.patient-description').text(val.description);
 							
 							$bookingContainer.append($request);
@@ -389,15 +471,32 @@ function isValidDate(value) {
 		// Attaches the booking request events
 		attachBookingRequestEvents = $.proxy(function(){
 			$(this.config.elements.bookings.acceptBooking).on('click', $.proxy(function(e){
-				var $container = $(e.currentTarget).closest(this.config.elements.bookings.request);				
+				var $container = $(e.currentTarget).closest(this.config.elements.bookings.request),
+					$date = $(this.config.elements.bookings.rescheduleDate),
+					$time = $(this.config.elements.bookings.rescheduleTime);
+					
 				acceptBookingRequest($container.attr('data-id'));
+				$time.empty();
+				$date.val('');
+				$container.removeClass('active');
 			}, this));
 			
 			$(this.config.elements.bookings.rescheduleBooking).on('click', $.proxy(function(e){
-				var $container = $(e.currentTarget).closest(this.config.elements.bookings.request);	
+				var $request = $(e.currentTarget).closest(this.config.elements.bookings.request),
+					$times = $(this.config.elements.bookings.rescheduleTime),
+					$reschedule = $(this.config.elements.bookings.rescheduleContainer);	
+					
+				setNextAvailableDateTime();
 				
-				//setNextAvailableDateTime();
-				rescheduleBookingRequest($container.attr('data-id'));
+				$times.select2('destroy');
+				$times.empty();
+				$times.append('<option></option>');
+				$times.select2({
+					placeholder: "Select an appointment date to get times"
+				});
+				
+				$reschedule.attr('data-id', $request.attr('data-id'));
+				$(this.config.elements.bookings.rescheduleContainer).addClass('active');
 			}, this));
 			
 			$(this.config.elements.bookings.cancelBooking).on('click', $.proxy(function(e){
@@ -407,26 +506,37 @@ function isValidDate(value) {
 		}, this);
 		
 		// Accepts a booking request
-		acceptBookingRequest = $.proxy(function(bookingID){
+		acceptBookingRequest = $.proxy(function(bookingID, newTime){
 			// Grab the node data, attach it to the doctor's appointments, remove the node
 			var $bookingRef = new Firebase(this.config.firebase.bookingRequests+'/'+bookingID);
 			
 			$bookingRef.on('value', $.proxy(function(snapshot){
 				var data = snapshot.val(),
 					$appointmentsRef = new Firebase(this.config.firebase.appointments),
-					$newAppointment = $appointmentsRef.push();
+					$newAppointment = $appointmentsRef.push(),
+					checkDate = null;
 					
 				if(data !== null){
+					if(typeof newTime !== 'undefined'){
+						data.requestTime = newTime;
+					}
+					
+					checkDate = moment(data.requestTime);
 					$newAppointment.set(data);
 				}
 				
 				$bookingRef.off('value');
 				$bookingRef.set(null);
 				
+				this.appointments.push(data);
+				refreshRequests();
+				
 				$(this.config.elements.bookings.request+'[data-id="'+bookingID+'"]').fadeOut(function(){
+					
 					$(this).remove();
 					checkRequestsLeft();
 				});
+				
 			}, this));
 		}, this);
 		
@@ -453,9 +563,75 @@ function isValidDate(value) {
 				$(this.config.elements.bookings.noMore).show();
 			}
 		}, this);
+
+		// Gets and sets the next available rescheduling time
+		setNextAvailableDateTime = $.proxy(function(){
+			var tomorrow = moment().add('day', 1),
+				rescheduleTimes = getRescheduleTimes(tomorrow, true),
+				$nextAvailable = $(this.config.elements.bookings.rescheduleNextAvailable);
+			
+			while(!rescheduleTimes.length){
+				tomorrow.add('day', 1);
+				rescheduleTimes = getRescheduleTimes(tomorrow, true);
+			}
+			
+			$nextAvailable.attr('data-id', rescheduleTimes[0].id);
+			$nextAvailable.text(rescheduleTimes[0].text);
+			
+		}, this);
 		
-		rescheduleBookingRequest = $.proxy(function(bookingID){
-			$(this.config.elements.bookings.rescheduleContainer).addClass('active');
+		// Gets the available times for a given day
+		getRescheduleTimes = $.proxy(function(day, includeDate){
+			var availableTimes = Array();
+				
+			day.set('hour', this.config.startHour);
+			day.set('minute', 0);
+			day.set('second', 0);
+			day.set('millisecond', 0);
+
+			while(day.hour() < this.config.endHour){
+				if(!doesTimeConflictWithAppointments(day.valueOf())){
+					if(includeDate){
+						availableTimes.push({id: day.valueOf(), text: day.format('MMM Do YYYY, h:mm a')});
+					} else {
+						availableTimes.push({id: day.valueOf(), text: day.format('h:mm a')});
+					}
+					
+				}
+				day.set('hour', day.hour()+1);
+			}
+			
+			return availableTimes;
+			
+		}, this);
+		
+		// Checks all the bookings and sees if there are any conflicts
+		refreshRequests = $.proxy(function(){
+			$.each(this.bookingRequests, $.proxy(function(bookingIndex, booking){
+				if(doesTimeConflictWithAppointments(booking.requestTime)){
+					this.bookingRequests[bookingIndex].conflict = true;
+					$(this.config.elements.bookings.request+'[data-id="'+booking.id+'"]').addClass('conflict');
+				}
+			}, this));
+		}, this);
+		
+		// Checks to see if a given timestamp will conflict with the doctor's appointments
+		doesTimeConflictWithAppointments = $.proxy(function(timestamp){
+			var conflict = false;
+			// For reach appointment
+			$.each(this.appointments, $.proxy(function(idx, val){
+				var appointmentStart = val.requestTime,
+					appointmentEnd = moment(val.requestTime).add('minute', this.config.appointmentTimeMin).valueOf(),
+					bookingStart = timestamp,
+					bookingEnd = moment(timestamp).add('minute', this.config.appointmentTimeMin).valueOf();
+				
+				if(between(bookingStart, appointmentStart, appointmentEnd) ||
+				between(bookingEnd, appointmentStart, appointmentEnd)){
+					conflict = true;
+				}
+			},this));
+			
+			return conflict;
 		}, this);
 		
 		// Sets up the management screens
@@ -495,7 +671,8 @@ function isValidDate(value) {
 				login : {
 					container : '#login-page',
 					email: '#login-page .info .email',
-					submit : '#login-page .info .submit-data'
+					submit : '#login-page .info .submit-data',
+					loading : '#login-page .loading-container'
 				},
 				manage : {
 					container : '#manage-doctor-assets',
@@ -554,8 +731,10 @@ function isValidDate(value) {
 				education: '',
 				avatar: 'img/default-avatar.png'
 			},
-			appointmentTimeMin : 30,
-			appointmentTimeMili: 180000
+			appointmentTimeMin : 60,
+			appointmentTimeMili: 360000,
+			startHour: 9,
+			endHour: 18
 		};
 		
 		// Start building the object

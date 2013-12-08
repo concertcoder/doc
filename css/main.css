@@ -95,6 +95,20 @@ select.invalid  + .invalid-input{
 	background-image: url('../img/dental-chair.jpg');
 }
 
+#login-page .loading-container{
+	text-align: center;
+	display: none;
+	padding-top: 10px;
+}
+
+#login-page .loading{
+	background-image: url('../img/ajax-loader.gif');
+	width: 16px;
+	height: 16px;
+	margin: 0 auto;
+	display: inline-block;
+}
+
 #login-page .info{
 	margin: 0 auto;
 	padding: 30px 20px 30px 20px;
