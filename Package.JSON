@@ -1,0 +1,8 @@
+{
+  "name": "ManageDoctor",
+  "description": "A package using naive versioning",
+  "author": "chris.ryan.gosselin@gmail.com",
+  "dependencies": {
+  },
+  "engine": "node 0.4.1"
+}
