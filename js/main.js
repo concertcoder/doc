@@ -382,7 +382,12 @@ function between(x, min, max) {
 		
 		// Initial calendar load
 		loadCalendar = $.proxy(function(){
-			var events = Array();
+			var events = Array(),
+				$calendar = $(this.config.elements.schedule.calendar);
+			
+			if($('.fc-button-today').length){
+				return;
+			}
 			
 			$.each(this.appointments, $.proxy(function(idx, val){
 				var event = {
@@ -395,7 +400,7 @@ function between(x, min, max) {
 				events.push(event);
 			}, this));
 			
-			$(this.config.elements.schedule.calendar).fullCalendar({
+			$calendar.fullCalendar({
 				events: events,
 				header: {
 					left: 'prev,next today',
@@ -513,6 +518,7 @@ function between(x, min, max) {
 					$bookingRef.off('value');				
 				} else {
 					$(this.config.elements.bookings.noMore).show();
+					loadCalendar();
 				}
 			}, this));
 		}, this);
