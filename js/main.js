@@ -338,7 +338,7 @@ function between(x, min, max) {
 				patientLastName: 'Gosselin', 
 				requestTime: time.valueOf(), 
 				description: 'Check up', 
-				doctor: 'greg@gmail.com',
+				doctor: this.email,
 				patientAvatar: 'http://m.c.lnkd.licdn.com/mpr/pub/image-vQXp4Zy0CpmigY8dPFox9R6J3tQJC1Lbk9_VK0O43WL0ClYWvQXVMph03gwkN98onKvj/chris-gosselin.jpg'
 			});
 			time.add('days', 14);
@@ -349,7 +349,7 @@ function between(x, min, max) {
 				patientLastName: 'Lewis', 
 				requestTime: time.valueOf(), 
 				description: 'Hands hurt', 
-				doctor: 'greg@gmail.com',
+				doctor: this.email,
 				patientAvatar: 'http://www.xxlmag.com/wp-content/uploads/2013/03/Ryan-Lewis001.jpg'
 			});
 			time.add('days', 14);
@@ -360,7 +360,7 @@ function between(x, min, max) {
 				patientLastName: 'Washington', 
 				requestTime: time.valueOf(), 
 				description: 'Teeth Missing', 
-				doctor: 'greg@gmail.com',
+				doctor: this.email,
 				patientAvatar: 'http://www.usmilitaryhalloffame.org/portals/0/Washington/george_washington_1307582258.jpg'
 			});
 			time.add('days', 14);
@@ -371,7 +371,7 @@ function between(x, min, max) {
 				patientLastName: 'Lamar', 
 				requestTime: time.valueOf(), 
 				description: 'Vocal chords', 
-				doctor: 'greg@gmail.com',
+				doctor: this.email,
 				patientAvatar: 'https://lh4.googleusercontent.com/-Vduw_xqikZY/AAAAAAAAAAI/AAAAAAAAADA/dSD6BQ_C-T4/s120-c/photo.jpg'
 			});
 		}, this);
@@ -461,6 +461,9 @@ function between(x, min, max) {
 						attachBookingRequestEvents();
 					}, this));
 
+					if(!this.bookingRequests.length){
+						$(this.config.elements.bookings.noMore).show();
+					}
 					
 					$bookingRef.off('value');				
 				} else {
