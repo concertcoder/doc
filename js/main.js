@@ -46,6 +46,7 @@ function between(x, min, max) {
 			createBookingRequest = null,
 			loadBookingRequests = null,
 			attachBookingRequestEvents = null,
+			acceptBookingRequest = null,
 			cancelBookingRequest = null,
 			checkRequestsLeft = null,
 			setNextAvailableDateTime = null,
@@ -529,11 +530,10 @@ function between(x, min, max) {
 				$bookingRef.set(null);
 				
 				this.appointments.push(data);
-				refreshRequests();
-				
-				$(this.config.elements.bookings.request+'[data-id="'+bookingID+'"]').fadeOut(function(){
-					
+							
+				$(this.config.elements.bookings.request+'[data-id="'+bookingID+'"]').fadeOut(function(){		
 					$(this).remove();
+					refreshRequests();
 					checkRequestsLeft();
 				});
 				
@@ -598,7 +598,7 @@ function between(x, min, max) {
 					}
 					
 				}
-				day.set('hour', day.hour()+1);
+				day.add('minute', this.config.appointmentTimeMin+1);
 			}
 			
 			return availableTimes;
@@ -731,7 +731,7 @@ function between(x, min, max) {
 				education: '',
 				avatar: 'img/default-avatar.png'
 			},
-			appointmentTimeMin : 60,
+			appointmentTimeMin : 29,
 			appointmentTimeMili: 360000,
 			startHour: 9,
 			endHour: 18
