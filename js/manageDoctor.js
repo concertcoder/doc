@@ -1,45 +1,16 @@
-// Checks validitity of date string
-function isValidDate(value) {
-  var userFormat = 'mm/dd/yyyy';
-
-  if(typeof value === 'undefined'){
-	return false;
-  }
-  
-  delimiter = /[^mdy]/.exec(userFormat)[0],
-  theFormat = userFormat.split(delimiter),
-  theDate = value.split(delimiter),
-
-  isDate = function (date, format) {
-    var m, d, y
-    for (var i = 0, len = format.length; i < len; i++) {
-      if (/m/.test(format[i])) m = date[i]
-      if (/d/.test(format[i])) d = date[i]
-      if (/y/.test(format[i])) y = date[i]
-    }
-    return (
-      m > 0 && m < 13 &&
-      y && y.length === 4 &&
-      d > 0 && d <= (new Date(y, m, 0)).getDate()
-    )
-  }
-
-  return isDate(theDate, theFormat)
-}
-
-// Simple check range function
-function between(x, min, max) {
-  return x >= min && x <= max;
-}
-
 // Manage Doctor Object
 (function ($){
 	window.ManageDoctor = function(options) {
 		// All of the ManageDoctor functions
 		var initialize = null,
 			initEvents = null,
-			initDom = null
-			validateEmail = null,
+			initDom = null,
+			rescheduleNextAvailableSubmit = null,
+			rescheduleDateSubmit = null,
+			rescheduleClose = null,
+			rescheduleSubmit = null,
+			loginSubmit = null,
+			editField = null,
 			updateDoctorField = null,
 			loadDoctor = null,
 			createDoctor = null,
@@ -92,102 +63,28 @@ function between(x, min, max) {
 		// Initializes load time events
 		initEvents = $.proxy(function(){
 		
+			// Handles the reschedule next available submission
 			$(this.config.elements.bookings.rescheduleNextAvailable).on('click', $.proxy(function(e){
-				var time = $(e.currentTarget).attr('data-id'),
-					$container = $(this.config.elements.bookings.rescheduleContainer),
-					bookingID = $container.attr('data-id'),
-					$date = $(this.config.elements.bookings.rescheduleDate),
-					$time = $(this.config.elements.bookings.rescheduleTime);
-				
-				acceptBookingRequest(bookingID,parseInt(time));
-				$time.empty();
-				$date.val('');
-				$container.removeClass('active');
+				return rescheduleNextAvailableSubmit($(e.currentTarget).attr('data-id'));
 			}, this));
 		
 			// When the rescheduler changes dates, the available times change
 			$(this.config.elements.bookings.rescheduleDate).on('change', $.proxy(function(){
-				var date = $(this.config.elements.bookings.rescheduleDate).val(),
-					dateValid = isValidDate(date),
-					$times = $(this.config.elements.bookings.rescheduleTime),
-					times = null;
-				
-				if(dateValid){
-					times = getRescheduleTimes(moment(date), false);
-					$times.select2('destroy');
-					
-					$.each(times, $.proxy(function(idx, val){
-						$times.append('<option value='+val.id+'>'+val.text+'</option>')
-					}, this));
-					
-					$times.select2({
-						placeholder: "Select a time"
-					});
-				}
+				rescheduleDateSubmit();
 			}, this));
 			
 			// Closes the rescheduler picker
 			$(this.config.elements.bookings.rescheduleClose).on('click', $.proxy(function(){
-				var $container = $(this.config.elements.bookings.rescheduleContainer),
-					$date = $(this.config.elements.bookings.rescheduleDate),
-					$time =  $(this.config.elements.bookings.rescheduleTime);
-					
-					$container.removeClass('active');
-					$time.empty();
-					$date.val('');
+				rescheduleClose();
 			}, this));
 			
 			// Reschedule picker event
 			$(this.config.elements.bookings.reschedule).on('click.submit', $.proxy(function(){
-				var $date = $(this.config.elements.bookings.rescheduleDate),
-					$time = $(this.config.elements.bookings.rescheduleTime),
-					$container = $(this.config.elements.bookings.rescheduleContainer),
-					militaryTimeRe = /(00|01|02|03|04|05|06|07|08|09|10|11|12|13|14|15|16|17|18|19|20|21|22|23)[:](0|1|2|3|4|5)\d{1}/,
-					date = $date.val(),
-					time = $time.select2('val'),
-					dateValid = isValidDate(date),
-					timeValid = time != "";
-					parsedDate = null,
-					today = null,
-					dateDiff = null;
-				
-				// Make sure inputs are valid, inform user if not
-				if(!dateValid){
-					$date.addClass('invalid');
-				} else {
-					// Make sure date is after today
-					parsedDate = moment(date, 'MM-DD-YYYY'),
-					today = moment(),
-					dateDiff = parsedDate.diff(today, 'days');
-					
-					if(dateDiff >= 0){
-						$date.removeClass('invalid');
-					} else {
-						dateValid = false;
-						$date.addClass('invalid');
-					}
-					
-					
-				}
-				
-				if(!timeValid){
-					$time.addClass('invalid');
-				} else {
-					$time.removeClass('invalid');
-				}
-				
-				if(dateValid && timeValid){
-					acceptBookingRequest($container.attr('data-id'), parseInt(time));
-					$time.empty();
-					$date.val('');
-					$container.removeClass('active');
-					
-				}
-				
+				rescheduleSubmit();
 			}, this));
 		
 			// Logout scenario
-			$('.logout').on('click', $.proxy(function(e){
+			$(this.config.elements.logout).on('click', $.proxy(function(e){
 				location.reload();
 				createBookingRequest();
 			}, this));
@@ -210,36 +107,12 @@ function between(x, min, max) {
 					} else {
 						$submitEl = $(e.currentTarget).nextAll(this.config.elements.submitData).first().trigger('click.submit');
 					}
-					
-					
 				}
 			}, this));
 		
 			// Login submssion
 			$(this.config.elements.login.submit).on('click.submit', $.proxy(function(e){
-				var $email = $(this.config.elements.login.email),
-					email = $email.val(),
-					$el = $(e.currentTarget);
-				
-				// Email must exist and be valid
-				if(email.length > 0 && validateEmail(email)){
-					
-					// Easy way to avoid double submissions
-					if($el.hasClass('submitting')){
-						return;
-					} else {
-						$el.addClass('submitting');
-					}
-					
-					$email.removeClass('invalid');
-					$(this.config.elements.login.loading).show();
-					this.email = email;
-					
-					loadDoctor(email);
-				} else {
-					$email.addClass('invalid');
-				}
-				
+				loginSubmit($(e.currentTarget));
 			}, this));
 			
 			// Setting up main tabs toggling
@@ -253,47 +126,174 @@ function between(x, min, max) {
 					$('#'+$el.data().id).addClass('active');
 				}
 				
-				$('.fc-button-today').trigger('click');
+				// Reset schedule back to today when arriving at schedule tab
+				if($el.data().id == 'schedule'){
+					$('.fc-button-today').trigger('click');
+				}
+				
 			}, this));
 			
 			// Setting up profile editing fields
 			$(this.config.elements.profile.editField).on('click.edit', $.proxy(function(e){
+				editField($(e.currentTarget));
+			}, this));
+		
+		}, this);
+		
+		// Reschedules the patient for the next available appointment
+		rescheduleNextAvailableSubmit = $.proxy(function(time){
+			var $container = $(this.config.elements.bookings.rescheduleContainer),
+				bookingID = $container.attr('data-id'),
+				$date = $(this.config.elements.bookings.rescheduleDate),
+				$time = $(this.config.elements.bookings.rescheduleTime);
+				
+				acceptBookingRequest(bookingID,parseInt(time));
+				$time.empty();
+				$date.val('');
+				$container.removeClass('active');
+				
+				// Disallow following href
+				return false;
+		}, this);
+		
+		// Handles the reschedule datepicker submission
+		rescheduleDateSubmit  = $.proxy(function(){
+			var date = $(this.config.elements.bookings.rescheduleDate).val(),
+				dateValid = isValidDate(date),
+				$times = $(this.config.elements.bookings.rescheduleTime),
+				times = null;
+				
+			if(dateValid){
+				times = getRescheduleTimes(moment(date), false);
+				$times.select2('destroy');
+				
+				$.each(times, $.proxy(function(idx, val){
+					$times.append('<option value='+val.id+'>'+val.text+'</option>')
+				}, this));
+				
+				$times.select2({
+					placeholder: "Select a time"
+				});
+			}
+		}, this);
+		
+		// Handles the rescheduler closing
+		rescheduleClose = $.proxy(function(){
+			var $container = $(this.config.elements.bookings.rescheduleContainer),
+				$date = $(this.config.elements.bookings.rescheduleDate),
+				$time =  $(this.config.elements.bookings.rescheduleTime);
+					
+			$container.removeClass('active');
+			$time.empty();
+			$date.val('');
+		}, this);
+		
+		// Handles the submission event for the rescheduler
+		rescheduleSubmit = $.proxy(function(){
+			var $date = $(this.config.elements.bookings.rescheduleDate),
+				$time = $(this.config.elements.bookings.rescheduleTime),
+				$container = $(this.config.elements.bookings.rescheduleContainer),
+				militaryTimeRe = /(00|01|02|03|04|05|06|07|08|09|10|11|12|13|14|15|16|17|18|19|20|21|22|23)[:](0|1|2|3|4|5)\d{1}/,
+				date = $date.val(),
+				time = $time.select2('val'),
+				dateValid = isValidDate(date),
+				timeValid = time != "";
+				parsedDate = null,
+				today = null,
+				dateDiff = null;
+				
+			// Make sure inputs are valid, inform user if not
+			if(!dateValid){
+				$date.addClass('invalid');
+			} else {
+				// Make sure date is after today
+				parsedDate = moment(date, 'MM-DD-YYYY'),
+				today = moment(),
+				dateDiff = parsedDate.diff(today, 'days');
+				
+				if(dateDiff >= 0){
+					$date.removeClass('invalid');
+				} else {
+					dateValid = false;
+					$date.addClass('invalid');
+				}	
+			}
+			
+			if(!timeValid){
+				$time.addClass('invalid');
+			} else {
+				$time.removeClass('invalid');
+			}
+			
+			if(dateValid && timeValid){
+				acceptBookingRequest($container.attr('data-id'), parseInt(time));
+				$time.empty();
+				$date.val('');
+				$container.removeClass('active');
+				
+			}
+		}, this);
+		
+		// Handles a login submission
+		loginSubmit = $.proxy(function($el){
+			var $email = $(this.config.elements.login.email),
+				email = $email.val();
+				
+			// Email must exist and be valid
+			if(email.length > 0 && validateEmail(email)){
+				
+				// Easy way to avoid double submissions
+				if($el.hasClass('submitting')){
+					return;
+				} else {
+					$el.addClass('submitting');
+				}
+				
+				$email.removeClass('invalid');
+				$(this.config.elements.login.loading).show();
+				this.email = email;
+				
+				loadDoctor(email);
+			} else {
+				$email.addClass('invalid');
+			}
+		}, this);
+		
+		// Handles editing a field
+		editField = $.proxy(function($el){
+			var $p = $el.nextAll('p').first(),
+				$input = $el.nextAll('input').first();
+				
+			$el.removeClass('glyphicon-pencil');
+			$el.addClass('glyphicon-ok');
+			
+			$p.hide();
+			$input.show();
+			
+			// On field submission
+			$el.on('click.submit', $.proxy(function(e){
 				var $el = $(e.currentTarget),
 					$p = $el.nextAll('p').first(),
 					$input = $el.nextAll('input').first();
-				
-				$el.removeClass('glyphicon-pencil');
-				$el.addClass('glyphicon-ok');
-				
-				$p.hide();
-				$input.show();
-				
-				// On field submission
-				$el.on('click.submit', $.proxy(function(e){
-					var $el = $(e.currentTarget),
-						$p = $el.nextAll('p').first(),
-						$input = $el.nextAll('input').first();
 
-					if($input.val().length){
-						if($p.find('img').length){
-							$p.find('img').attr('src', $input.val())
-						} else {
-							$p.text($input.val());
-						}
-						
-						updateDoctorField($input.data().id, $input.val());
-						$input.removeClass('invalid');
-						$el.removeClass('glyphicon-ok');
-						$el.addClass('glyphicon-pencil');
-						$el.unbind('click.submit');
-						$input.hide();						
-						$p.show();
+				if($input.val().length){
+					if($p.find('img').length){
+						$p.find('img').attr('src', $input.val())
 					} else {
-						$input.addClass('invalid');
+						$p.text($input.val());
 					}
-				}, this));
+					
+					updateDoctorField($input.data().id, $input.val());
+					$input.removeClass('invalid');
+					$el.removeClass('glyphicon-ok');
+					$el.addClass('glyphicon-pencil');
+					$el.unbind('click.submit');
+					$input.hide();						
+					$p.show();
+				} else {
+					$input.addClass('invalid');
+				}
 			}, this));
-		
 		}, this);
 		
 		// Updates a doctors field given the field id (name) and its value
@@ -420,7 +420,7 @@ function between(x, min, max) {
 					end:  moment(appointment.requestTime).add('minute', this.config.appointmentTimeMin).toDate(),
 					allDay: false
 				};
-				
+				console.log(event);
 			$(this.config.elements.schedule.calendar).fullCalendar( 'renderEvent', event, true);
 		}, this);
 		
@@ -708,18 +708,13 @@ function between(x, min, max) {
 			
 			
 			$(this.config.elements.login.container).hide();
+			$('body').addClass('logged-in');
 			$(this.config.elements.manage.container).show();
 			
 			loadBookingRequests();
 			
 		}, this);
-		
-		// validates an email
-		validateEmail = function(email){
-			var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-			return re.test(email);
-		}
-		
+
 		// config data
 		ManageDoctor.defaultConfig = {
 			elements : {
@@ -729,6 +724,7 @@ function between(x, min, max) {
 					submit : '#login-page .info .submit-data',
 					loading : '#login-page .loading-container'
 				},
+				logout: '.logout',
 				manage : {
 					container : '#manage-doctor-assets',
 					tabs : {
